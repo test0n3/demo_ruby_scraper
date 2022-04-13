@@ -14,17 +14,16 @@ class Scraper
       end
       return
     end
-
-    rows = doc.at('.wikitable').at('tbody').search('tr')
-    rows.each do |row|
+    rows = doc.at('.wikitable').search('tbody').search('tr')
+    t_head = rows.shift.search('th')
+    rows.first(5).each do |row|
       cells = row.search('td')
-
-      result.push({ title: return_text(cells[0]),
-                    town: return_text(cells[1]),
-                    county: return_text(cells[2]),
-                    region: return_text(cells[3]),
-                    type: return_text(cells[4]),
-                    summary: return_text(cells[5]) })
+      hash = {}
+      t_head.each_with_index do |col, index|
+        col_name = return_text(col)
+        hash[col_name.to_sym] = return_text(cells[index])
+      end
+      result.push(hash)
     end
     result
   end
