@@ -2,21 +2,25 @@ require 'nokogiri'
 require 'open-uri'
 
 class Scraper
-  URL_TO_SCRAPE = 'https://en.wikipedia.org/wiki/List_of_museums_in_Idaho'
+  attr_reader :url_to_scrape
+
+  def initialize(url_to_scrape = nil)
+    @url_to_scrape = url_to_scrape
+  end
+
   def scrape_url
     result = []
-    html = URI.open(URL_TO_SCRAPE)
-    doc = Nokogiri::HTML5(html)
+    doc = Nokogiri::HTML5(URI.open(@url_to_scrape))
 
     if doc.errors.count > 0
-      doc.errors.each do |err|
-        puts err
-      end
+      errors_messenger(doc)
       return
     end
+
     rows = doc.at('.wikitable').search('tbody').search('tr')
     t_head = rows.shift.search('th')
-    rows.first(5).each do |row|
+
+    rows.each do |row|
       cells = row.search('td')
       hash = {}
       t_head.each_with_index do |col, index|
@@ -28,11 +32,20 @@ class Scraper
     result
   end
 
+  private
   def return_text(cell)
     cell.nil? ? '' : cell.text.strip
   end
+  
+  def errors_messenger(source)
+    source.errors.each do |err|
+      puts err
+    end
+  end
 end
 
-# scrape = Scraper.new
+# scrape = Scraper.new('https://en.wikipedia.org/wiki/List_of_museums_in_Idaho')
+scrape = Scraper.new('https://en.wikipedia.org/wiki/List_of_museums_in_Illinois')
+# scrape = Scraper.new('https://www.google.com/')
 
-# puts (scrape.scrape_url)
+puts (scrape.scrape_url)
